@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Stock Analysis Agent</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: #f8fafc;
+            padding: 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 2px;
+        }
+
+        .news-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4f46e5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .news-item:hover {
+            transform: translateX(5px);
+        }
+
+        .news-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .news-date {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .sentiment-metrics {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .recommendation-card.sell {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .recommendation-card.hold {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .recommendation-action {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .recommendation-confidence {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .recommendation-timestamp {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .history-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #10b981;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .history-action {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .history-details {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .summary-text {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            color: #374151;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            border-left: 4px solid #4f46e5;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .sentiment-metrics {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Intelligent Stock Analysis Agent</h1>
+            <p>Advanced AI-powered financial data extraction and analysis</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-form">
+                <div class="form-group">
+                    <label for="stockSymbol">Stock Symbol</label>
+                    <input type="text" id="stockSymbol" value="AAPL" placeholder="e.g., AAPL, GOOGL, TSLA">
+                </div>
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" value="2025-01-01">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" value="2025-06-22">
+                </div>
+                <button class="analyze-btn" onclick="analyzeStock()">🔍 Analyze Stock</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>AI Agent is analyzing financial data...</p>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- News Sentiment Analysis -->
+            <div class="section">
+                <h2 class="section-title">📊 News Sentiment Analysis</h2>
+                <div id="newsContainer">
+                    <!-- News items will be populated here -->
+                </div>
+            </div>
+
+            <!-- Stock Visualizations -->
+            <div class="section">
+                <h2 class="section-title">📈 Stock Visualizations</h2>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Closing Prices</div>
+                    <canvas id="priceChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Candlestick Chart</div>
+                    <canvas id="candlestickChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Recommendation -->
+            <div class="section">
+                <h2 class="section-title">💡 AI Recommendation</h2>
+                <div id="recommendationCard" class="recommendation-card">
+                    <!-- Recommendation will be populated here -->
+                </div>
+            </div>
+
+            <!-- News Summary -->
+            <div class="section">
+                <h2 class="section-title">📰 News Summary</h2>
+                <div id="newsSummary" class="summary-text">
+                    <!-- Summary will be populated here -->
+                </div>
+            </div>
+
+            <!-- Recommendation History -->
+            <div class="section">
+                <h2 class="section-title">📋 Recommendation History</h2>
+                <div id="historyContainer">
+                    <!-- History items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dummy JSON data
+        const stockData = {
+            "AAPL": {
+                news: [
+                    {
+                        title: "Apple reports strong Q2 earnings",
+                        date: "2025-06-21",
+                        polarity: 0.40,
+                        subjectivity: 0.55,
+                        sentiment: "positive"
+                    },
+                    {
+                        title: "Supply chain issues affect Apple production",
+                        date: "2025-06-20",
+                        polarity: -0.25,
+                        subjectivity: 0.65,
+                        sentiment: "negative"
+                    }
+                ],
+                prices: [
+                    { date: "2025-01-01", open: 181.99, high: 184.35, low: 181.50, close: 183.25, volume: 45234000 },
+                    { date: "2025-01-02", open: 183.25, high: 186.12, low: 182.80, close: 185.64, volume: 52341000 },
+                    { date: "2025-01-03", open: 185.64, high: 188.90, low: 184.20, close: 187.45, volume: 48523000 },
+                    { date: "2025-01-04", open: 187.45, high: 189.75, low: 186.30, close: 188.92, volume: 41234000 },
+                    { date: "2025-01-05", open: 188.92, high: 192.15, low: 187.80, close: 191.35, volume: 55123000 },
+                    { date: "2025-06-18", open: 195.30, high: 198.45, low: 194.20, close: 197.85, volume: 38456000 },
+                    { date: "2025-06-19", open: 197.85, high: 200.12, low: 196.45, close: 199.25, volume: 42789000 },
+                    { date: "2025-06-20", open: 199.25, high: 201.80, low: 198.30, close: 200.55, volume: 39876000 },
+                    { date: "2025-06-21", open: 200.55, high: 203.25, low: 199.80, close: 202.40, volume: 45123000 },
+                    { date: "2025-06-22", open: 202.40, high: 204.75, low: 201.90, close: 203.85, volume: 41567000 }
+                ],
+                recommendation: {
+                    action: "BUY",
+                    confidence: 85.0,
+                    timestamp: "2025-06-22 13:35:00"
+                },
+                summary: "Apple's stock shows growth potential based on recent earnings and sentiment analysis. Strong fundamentals and positive market outlook support the current recommendation.",
+                history: [
+                    { action: "Buy", date: "2025-06-22 13:35:00", confidence: "85.0%" },
+                    { action: "Hold", date: "2025-06-15 10:20:00", confidence: "72.5%" },
+                    { action: "Buy", date: "2025-06-08 14:45:00", confidence: "78.3%" }
+                ]
+            },
+            "GOOGL": {
+                news: [
+                    {
+                        title: "Google announces new AI breakthrough",
+                        date: "2025-06-21",
+                        polarity: 0.65,
+                        subjectivity: 0.45,
+                        sentiment: "positive"
+                    },
+                    {
+                        title: "Regulatory concerns over Google's market dominance",
+                        date: "2025-06-19",
+                        polarity: -0.35,
+                        subjectivity: 0.70,
+                        sentiment: "negative"
+                    }
+                ],
+                prices: [
+                    { date: "2025-01-01", open: 135.50, high: 138.20, low: 134.80, close: 137.65, volume: 28456000 },
+                    { date: "2025-01-02", open: 137.65, high: 140.45, low: 136.90, close: 139.80, volume: 31234000 },
+                    { date: "2025-01-03", open: 139.80, high: 142.15, low: 138.50, close: 141.25, volume: 29876000 },
+                    { date: "2025-01-04", open: 141.25, high: 143.80, low: 140.20, close: 142.95, volume: 27543000 },
+                    { date: "2025-01-05", open: 142.95, high: 145.30, low: 141.75, close: 144.60, volume: 33456000 },
+                    { date: "2025-06-18", open: 148.20, high: 150.85, low: 147.30, close: 149.95, volume: 25789000 },
+                    { date: "2025-06-19", open: 149.95, high: 152.40, low: 148.80, close: 151.75, volume: 28456000 },
+                    { date: "2025-06-20", open: 151.75, high: 154.20, low: 150.90, close: 153.45, volume: 26834000 },
+                    { date: "2025-06-21", open: 153.45, high: 156.80, low: 152.60, close: 155.20, volume: 30567000 },
+                    { date: "2025-06-22", open: 155.20, high: 157.95, low: 154.30, close: 156.85, volume: 29123000 }
+                ],
+                recommendation: {
+                    action: "HOLD",
+                    confidence: 72.5,
+                    timestamp: "2025-06-22 13:35:00"
+                },
+                summary: "Google shows mixed signals with AI advancements offset by regulatory concerns. Current position suggests holding while monitoring regulatory developments.",
+                history: [
+                    { action: "Hold", date: "2025-06-22 13:35:00", confidence: "72.5%" },
+                    { action: "Buy", date: "2025-06-15 10:20:00", confidence: "68.2%" },
+                    { action: "Hold", date: "2025-06-08 14:45:00", confidence: "71.8%" }
+                ]
+            },
+			
+			
+    "MSFT": {
+        news: [
+            {
+                title: "Microsoft Azure revenue surges 35% in latest quarter",
+                date: "2025-06-22",
+                polarity: 0.65,
+                subjectivity: 0.45,
+                sentiment: "positive"
+            },
+            {
+                title: "Microsoft faces regulatory scrutiny over AI partnerships",
+                date: "2025-06-21",
+                polarity: -0.30,
+                subjectivity: 0.70,
+                sentiment: "negative"
+            },
+            {
+                title: "New Microsoft Office suite launches with AI integration",
+                date: "2025-06-19",
+                polarity: 0.50,
+                subjectivity: 0.60,
+                sentiment: "positive"
+            }
+        ],
+        prices: [
+            { date: "2025-01-01", open: 415.23, high: 418.45, low: 412.80, close: 417.12, volume: 32145000 },
+            { date: "2025-01-02", open: 417.12, high: 420.35, low: 415.90, close: 419.78, volume: 28934000 },
+            { date: "2025-01-03", open: 419.78, high: 423.50, low: 418.20, close: 422.15, volume: 35678000 },
+            { date: "2025-01-04", open: 422.15, high: 425.80, low: 420.45, close: 424.92, volume: 31245000 },
+            { date: "2025-01-05", open: 424.92, high: 428.15, low: 423.30, close: 427.35, volume: 29876000 },
+            { date: "2025-06-18", open: 445.30, high: 448.75, low: 443.20, close: 447.85, volume: 26789000 },
+            { date: "2025-06-19", open: 447.85, high: 451.20, low: 446.45, close: 450.25, volume: 30123000 },
+            { date: "2025-06-20", open: 450.25, high: 453.80, low: 449.30, close: 452.55, volume: 28456000 },
+            { date: "2025-06-21", open: 452.55, high: 455.25, low: 451.80, close: 454.40, volume: 32567000 },
+            { date: "2025-06-22", open: 454.40, high: 457.75, low: 453.90, close: 456.85, volume: 31234000 }
+        ],
+        recommendation: {
+            action: "BUY",
+            confidence: 88.5,
+            timestamp: "2025-06-22 13:35:00"
+        },
+        summary: "Microsoft demonstrates strong growth in cloud services and AI integration. Azure's continued expansion and positive earnings outlook support bullish sentiment despite regulatory concerns.",
+        history: [
+            { action: "Buy", date: "2025-06-22 13:35:00", confidence: "88.5%" },
+            { action: "Buy", date: "2025-06-15 10:20:00", confidence: "82.3%" },
+            { action: "Hold", date: "2025-06-08 14:45:00", confidence: "75.8%" }
+        ]
+    },
+    "TSLA": {
+        news: [
+            {
+                title: "Tesla delivers record number of vehicles in Q2",
+                date: "2025-06-22",
+                polarity: 0.75,
+                subjectivity: 0.40,
+                sentiment: "positive"
+            },
+            {
+                title: "Tesla stock volatility concerns investors amid market uncertainty",
+                date: "2025-06-21",
+                polarity: -0.45,
+                subjectivity: 0.80,
+                sentiment: "negative"
+            },
+            {
+                title: "Tesla's autopilot feature receives safety approval in Europe",
+                date: "2025-06-20",
+                polarity: 0.35,
+                subjectivity: 0.50,
+                sentiment: "positive"
+            }
+        ],
+        prices: [
+            { date: "2025-01-01", open: 248.85, high: 252.30, low: 246.50, close: 251.45, volume: 68234000 },
+            { date: "2025-01-02", open: 251.45, high: 255.80, low: 249.20, close: 254.12, volume: 72456000 },
+            { date: "2025-01-03", open: 254.12, high: 258.90, low: 252.75, close: 257.25, volume: 65123000 },
+            { date: "2025-01-04", open: 257.25, high: 261.45, low: 255.80, close: 259.92, volume: 59876000 },
+            { date: "2025-01-05", open: 259.92, high: 264.15, low: 258.30, close: 262.75, volume: 71234000 },
+            { date: "2025-06-18", open: 275.30, high: 279.45, low: 273.20, close: 278.85, volume: 58456000 },
+            { date: "2025-06-19", open: 278.85, high: 282.20, low: 276.45, close: 280.25, volume: 62789000 },
+            { date: "2025-06-20", open: 280.25, high: 284.80, low: 279.30, close: 283.55, volume: 56876000 },
+            { date: "2025-06-21", open: 283.55, high: 286.25, low: 281.80, close: 285.40, volume: 65123000 },
+            { date: "2025-06-22", open: 285.40, high: 289.75, low: 284.90, close: 288.85, volume: 68567000 }
+        ],
+        recommendation: {
+            action: "HOLD",
+            confidence: 72.3,
+            timestamp: "2025-06-22 13:35:00"
+        },
+        summary: "Tesla shows strong delivery numbers but faces volatility concerns. Record Q2 deliveries offset by market uncertainty and regulatory challenges. Mixed sentiment suggests cautious approach.",
+        history: [
+            { action: "Hold", date: "2025-06-22 13:35:00", confidence: "72.3%" },
+            { action: "Hold", date: "2025-06-15 10:20:00", confidence: "68.9%" },
+            { action: "Buy", date: "2025-06-08 14:45:00", confidence: "79.5%" }
+        ]
+    },
+    "ALPHABET": {
+        news: [
+            {
+                title: "Google announces breakthrough in quantum computing",
+                date: "2025-06-22",
+                polarity: 0.80,
+                subjectivity: 0.35,
+                sentiment: "positive"
+            },
+            {
+                title: "Alphabet faces antitrust lawsuit over search monopoly",
+                date: "2025-06-21",
+                polarity: -0.60,
+                subjectivity: 0.75,
+                sentiment: "negative"
+            },
+            {
+                title: "YouTube ad revenue shows modest growth despite competition",
+                date: "2025-06-20",
+                polarity: 0.15,
+                subjectivity: 0.65,
+                sentiment: "neutral"
+            }
+        ],
+        prices: [
+            { date: "2025-01-01", open: 138.45, high: 140.20, low: 137.80, close: 139.85, volume: 28345000 },
+            { date: "2025-01-02", open: 139.85, high: 142.15, low: 139.20, close: 141.78, volume: 31256000 },
+            { date: "2025-01-03", open: 141.78, high: 144.50, low: 141.20, close: 143.25, volume: 29876000 },
+            { date: "2025-01-04", open: 143.25, high: 145.80, low: 142.45, close: 145.12, volume: 27234000 },
+            { date: "2025-01-05", open: 145.12, high: 147.35, low: 144.30, close: 146.75, volume: 33567000 },
+            { date: "2025-06-18", open: 158.30, high: 161.45, low: 157.20, close: 160.85, volume: 24789000 },
+            { date: "2025-06-19", open: 160.85, high: 163.20, low: 159.45, close: 162.25, volume: 26123000 },
+            { date: "2025-06-20", open: 162.25, high: 164.80, low: 161.30, close: 163.55, volume: 23456000 },
+            { date: "2025-06-21", open: 163.55, high: 166.25, low: 162.80, close: 165.40, volume: 28567000 },
+            { date: "2025-06-22", open: 165.40, high: 168.75, low: 164.90, close: 167.85, volume: 31234000 }
+        ],
+        recommendation: {
+            action: "BUY",
+            confidence: 79.2,
+            timestamp: "2025-06-22 13:35:00"
+        },
+        summary: "Google's quantum computing breakthrough demonstrates innovation leadership despite antitrust concerns. Strong technical fundamentals and AI capabilities support long-term growth potential.",
+        history: [
+            { action: "Buy", date: "2025-06-22 13:35:00", confidence: "79.2%" },
+            { action: "Hold", date: "2025-06-15 10:20:00", confidence: "71.8%" },
+            { action: "Buy", date: "2025-06-08 14:45:00", confidence: "83.4%" }
+        ]
+    },
+    "AMZN": {
+        news: [
+            {
+                title: "Amazon Web Services expands data center operations globally",
+                date: "2025-06-22",
+                polarity: 0.55,
+                subjectivity: 0.45,
+                sentiment: "positive"
+            },
+            {
+                title: "Amazon workers vote to unionize at three facilities",
+                date: "2025-06-21",
+                polarity: -0.20,
+                subjectivity: 0.85,
+                sentiment: "negative"
+            },
+            {
+                title: "Prime membership reaches new milestone of 250 million users",
+                date: "2025-06-19",
+                polarity: 0.70,
+                subjectivity: 0.30,
+                sentiment: "positive"
+            }
+        ],
+        prices: [
+            { date: "2025-01-01", open: 165.23, high: 167.45, low: 164.80, close: 166.92, volume: 35234000 },
+            { date: "2025-01-02", open: 166.92, high: 169.35, low: 166.20, close: 168.78, volume: 38456000 },
+            { date: "2025-01-03", open: 168.78, high: 171.50, low: 168.20, close: 170.25, volume: 32876000 },
+            { date: "2025-01-04", open: 170.25, high: 172.80, low: 169.45, close: 172.12, volume: 29345000 },
+            { date: "2025-01-05", open: 172.12, high: 174.35, low: 171.30, close: 173.75, volume: 36789000 },
+            { date: "2025-06-18", open: 185.30, high: 188.45, low: 184.20, close: 187.85, volume: 28456000 },
+            { date: "2025-06-19", open: 187.85, high: 190.20, low: 186.45, close: 189.25, volume: 31789000 },
+            { date: "2025-06-20", open: 189.25, high: 191.80, low: 188.30, close: 190.55, volume: 27876000 },
+            { date: "2025-06-21", open: 190.55, high: 193.25, low: 189.80, close: 192.40, volume: 33123000 },
+            { date: "2025-06-22", open: 192.40, high: 194.75, low: 191.90, close: 193.85, volume: 34567000 }
+        ],
+        recommendation: {
+            action: "BUY",
+            confidence: 81.7,
+            timestamp: "2025-06-22 13:35:00"
+        },
+        summary: "Amazon's AWS expansion and Prime growth milestone demonstrate strong business fundamentals. Labor concerns present short-term headwinds but long-term cloud dominance remains intact.",
+        history: [
+            { action: "Buy", date: "2025-06-22 13:35:00", confidence: "81.7%" },
+            { action: "Buy", date: "2025-06-15 10:20:00", confidence: "78.4%" },
+            { action: "Hold", date: "2025-06-08 14:45:00", confidence: "74.2%" }
+        ]
+    },
+    "NVDA": {
+        news: [
+            {
+                title: "NVIDIA's AI chip demand continues to outpace supply",
+                date: "2025-06-22",
+                polarity: 0.60,
+                subjectivity: 0.55,
+                sentiment: "positive"
+            },
+            {
+                title: "Semiconductor industry faces potential trade restrictions",
+                date: "2025-06-21",
+                polarity: -0.40,
+                subjectivity: 0.70,
+                sentiment: "negative"
+            },
+            {
+                title: "NVIDIA partners with automotive companies for self-driving technology",
+                date: "2025-06-20",
+                polarity: 0.45,
+                subjectivity: 0.50,
+                sentiment: "positive"
+            }
+        ],
+        prices: [
+            { date: "2025-01-01", open: 875.23, high: 885.45, low: 870.80, close: 882.92, volume: 48234000 },
+            { date: "2025-01-02", open: 882.92, high: 895.35, low: 880.20, close: 891.78, volume: 52456000 },
+            { date: "2025-01-03", open: 891.78, high: 905.50, low: 888.20, close: 902.25, volume: 47876000 },
+            { date: "2025-01-04", open: 902.25, high: 915.80, low: 899.45, close: 912.12, volume: 43345000 },
+            { date: "2025-01-05", open: 912.12, high: 925.35, low: 908.30, close: 921.75, volume: 56789000 },
+            { date: "2025-06-18", open: 1125.30, high: 1145.45, low: 1118.20, close: 1138.85, volume: 38456000 },
+            { date: "2025-06-19", open: 1138.85, high: 1155.20, low: 1132.45, close: 1148.25, volume: 42789000 },
+            { date: "2025-06-20", open: 1148.25, high: 1165.80, low: 1142.30, close: 1158.55, volume: 39876000 },
+            { date: "2025-06-21", open: 1158.55, high: 1175.25, low: 1151.80, close: 1168.40, volume: 45123000 },
+            { date: "2025-06-22", open: 1168.40, high: 1185.75, low: 1162.90, close: 1178.85, volume: 47567000 }
+        ],
+        recommendation: {
+            action: "BUY",
+            confidence: 91.3,
+            timestamp: "2025-06-22 13:35:00"
+        },
+        summary: "NVIDIA maintains AI market leadership with strong demand exceeding supply. Trade restriction concerns present risks but automotive partnerships and technological moat support bullish outlook.",
+        history: [
+            { action: "Buy", date: "2025-06-22 13:35:00", confidence: "91.3%" },
+            { action: "Buy", date: "2025-06-15 10:20:00", confidence: "89.7%" },
+            { action: "Buy", date: "2025-06-08 14:45:00", confidence: "87.2%" }
+        ]
+    },
+    "META": {
+        news: [
+            {
+                title: "Meta's Reality Labs division shows promising VR adoption metrics",
+                date: "2025-06-22",
+                polarity: 0.50,
+                subjectivity: 0.60,
+                sentiment: "positive"
+            },
+            {
+                title: "Facebook platform experiences widespread outage affecting millions",
+                date: "2025-06-21",
+                polarity: -0.55,
+                subjectivity: 0.40,
+                sentiment: "negative"
+            },
+            {
+                title: "Instagram introduces new AI-powered content creation tools",
+                date: "2025-06-20",
+                polarity: 0.35,
+                subjectivity: 0.65,
+                sentiment: "positive"
+            }
+        ],
+        prices: [
+            { date: "2025-01-01", open: 485.23, high: 492.45, low: 482.80, close: 489.92, volume: 22234000 },
+            { date: "2025-01-02", open: 489.92, high: 495.35, low: 487.20, close: 493.78, volume: 24456000 },
+            { date: "2025-01-03", open: 493.78, high: 500.50, low: 491.20, close: 498.25, volume: 21876000 },
+            { date: "2025-01-04", open: 498.25, high: 505.80, low: 495.45, close: 503.12, volume: 19345000 },
+            { date: "2025-01-05", open: 503.12, high: 510.35, low: 500.30, close: 507.75, volume: 26789000 },
+            { date: "2025-06-18", open: 542.30, high: 548.45, low: 539.20, close: 545.85, volume: 18456000 },
+            { date: "2025-06-19", open: 545.85, high: 552.20, low: 543.45, close: 549.25, volume: 21789000 },
+            { date: "2025-06-20", open: 549.25, high: 555.80, low: 546.30, close: 553.55, volume: 17876000 },
+            { date: "2025-06-21", open: 553.55, high: 560.25, low: 550.80, close: 557.40, volume: 23123000 },
+            { date: "2025-06-22", open: 557.40, high: 564.75, low: 554.90, close: 561.85, volume: 24567000 }
+        ],
+        recommendation: {
+            action: "HOLD",
+            confidence: 69.8,
+            timestamp: "2025-06-22 13:35:00"
+        },
+        summary: "Meta shows mixed signals with VR progress offset by platform reliability issues. Reality Labs growth promising but recent outages raise operational concerns. Cautious optimism warranted.",
+        history: [
+            { action: "Hold", date: "2025-06-22 13:35:00", confidence: "69.8%" },
+            { action: "Hold", date: "2025-06-15 10:20:00", confidence: "65.4%" },
+            { action: "Buy", date: "2025-06-08 14:45:00", confidence: "73.9%" }
+        ]
+    }
+
+        };
+
+        let priceChart = null;
+        let candlestickChart = null;
+
+        function analyzeStock() {
+            const symbol = document.getElementById('stockSymbol').value.toUpperCase();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('mainContent').style.display = 'none';
+
+            // Simulate API call delay
+            setTimeout(() => {
+                displayStockData(symbol);
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('mainContent').style.display = 'block';
+            }, 2000);
+        }
+
+        function displayStockData(symbol) {
+            const data = stockData[symbol] || stockData['AAPL']; // Fallback to AAPL if symbol not found
+
+            // Display news sentiment
+            displayNews(data.news);
+            
+            // Display charts
+            displayPriceChart(data.prices);
+            displayCandlestickChart(data.prices);
+            
+            // Display recommendation
+            displayRecommendation(data.recommendation);
+            
+            // Display summary
+            displaySummary(data.summary);
+            
+            // Display history
+            displayHistory(data.history);
+        }
+
+        function displayNews(news) {
+            const container = document.getElementById('newsContainer');
+            container.innerHTML = '';
+
+            news.forEach(item => {
+                const newsElement = document.createElement('div');
+                newsElement.className = 'news-item';
+                newsElement.innerHTML = `
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-date">${item.date}</div>
+                    <div class="sentiment-metrics">
+                        <div class="metric">
+                            <div class="metric-label">Polarity</div>
+                            <div class="metric-value">${item.polarity.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Subjectivity</div>
+                            <div class="metric-value">${item.subjectivity.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Sentiment</div>
+                            <div class="metric-value" style="background: ${getSentimentColor(item.sentiment)}">${item.sentiment.toUpperCase()}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(newsElement);
+            });
+        }
+
+        function getSentimentColor(sentiment) {
+            switch(sentiment) {
+                case 'positive': return 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                case 'negative': return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                default: return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+            }
+        }
+
+        function displayPriceChart(prices) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (priceChart) {
+                priceChart.destroy();
+            }
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: prices.map(p => p.date),
+                    datasets: [{
+                        label: 'Closing Price',
+                        data: prices.map(p => p.close),
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayCandlestickChart(prices) {
+            const ctx = document.getElementById('candlestickChart').getContext('2d');
+            
+            if (candlestickChart) {
+                candlestickChart.destroy();
+            }
+
+            // Simulate candlestick with bar chart
+            candlestickChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: prices.slice(-10).map(p => p.date.split('-')[2]), // Last 10 days, show only day
+                    datasets: [{
+                        label: 'High-Low Range',
+                        data: prices.slice(-10).map(p => p.high - p.low),
+                        backgroundColor: prices.slice(-10).map(p => 
+                            p.close > p.open ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'
+                        ),
+                        borderColor: prices.slice(-10).map(p => 
+                            p.close > p.open ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)'
+                        ),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayRecommendation(recommendation) {
+            const card = document.getElementById('recommendationCard');
+            const actionClass = recommendation.action.toLowerCase();
+            
+            card.className = `recommendation-card ${actionClass}`;
+            card.innerHTML = `
+                <div class="recommendation-action">${recommendation.action}</div>
+                <div class="recommendation-confidence">Confidence: ${recommendation.confidence}%</div>
+                <div class="recommendation-timestamp">Generated: ${recommendation.timestamp}</div>
+            `;
+        }
+
+        function displaySummary(summary) {
+            document.getElementById('newsSummary').textContent = summary;
+        }
+
+        function displayHistory(history) {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = '';
+
+            history.forEach(item => {
+                const historyElement = document.createElement('div');
+                historyElement.className = 'history-item';
+                historyElement.innerHTML = `
+                    <div>
+                        <div class="history-action">${item.action} Recommendation</div>
+                        <div class="history-details">${item.date}</div>
+                    </div>
+                    <div class="history-details">Confidence: ${item.confidence}</div>
+                `;
+                container.appendChild(historyElement);
+            });
+        }
+
+        // Initialize with AAPL data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displayStockData('AAPL');
+        });
+
+        // Set default end date to today
+        document.getElementById('endDate').value = new Date().toISOString().split('T')[0];
+    </script>
+</body>
+</html>
